@@ -1,15 +1,13 @@
-from selenium import webdriver
 import time
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
+import csv
 
 
-driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+driver = webdriver.Chrome('./chromedriver')
 
 options = Options()
 options.add_argument('--headless')
@@ -47,7 +45,26 @@ currentHeight = get_window_height(driver)
 startH = 0
 endH = currentHeight
 
+ranks = []
+ids = []
+
 while not is_scroll_on_bottom(driver):
+    time.sleep(2)
+
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    golem_cards = soup.find_all('div', class_='styles_card__7uWFB')
+
+    for golem_card in golem_cards:
+        golem_id = golem_card.find('div', class_='styles_name__XaPxb').text
+        if golem_id not in ids:
+            ids.append(golem_id)
     driver.execute_script(f"document.getElementById('scrollDiv').{get_next_scroll(startH, endH)}")
     startH = endH
     endH += currentHeight
+
+    file = open('lib/data.csv', 'w+', newline='')
+    with file:
+        write = csv.writer(file)
+        write.writerow(ids)
+
+
